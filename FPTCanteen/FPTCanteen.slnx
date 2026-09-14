@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="FPTCanteen.Data/FPTCanteen.Data.csproj" />
+  <Project Path="FPTCanteen.KitchenServer/FPTCanteen.KitchenServer.csproj" />
+  <Project Path="FPTCanteen.PosClient/FPTCanteen.PosClient.csproj" />
+</Solution>
