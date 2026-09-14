@@ -16,9 +16,7 @@ internal class Program
     private const int Port = 9500;
     private const int UdpPort = 9501;
 
-    // Thay <user>/<repo> bang GitHub cua ban sau khi day file prices.sample.json len,
-    // vi du: https://raw.githubusercontent.com/hungsatoru/FCanteen/refs/heads/lab01/prices.sample.json
-    private const string DefaultPriceUrl = "https://raw.githubusercontent.com/<user>/<repo>/refs/heads/lab01/prices.sample.json";
+    private const string DefaultPriceUrl = "https://raw.githubusercontent.com/hung2101-fushiguro/PRN222/refs/heads/lab01/prices.sample.json";
 
     private static string GetConnectionString()
     {
