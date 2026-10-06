@@ -1,0 +1,94 @@
+@page "/menu-admin"
+@rendermode InteractiveServer
+@using FCanteenLab06.Data
+@using FCanteenLab06.Models
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<CanteenDbContext> Factory
+
+<h3>Quản lý thực đơn</h3>
+
+<input @bind="kw" @bind:event="oninput" placeholder="Tìm món..." class="form-control" style="max-width:300px" />
+<button class="btn btn-success btn-sm" @onclick="() => edit = new MenuItem()">+ Thêm</button>
+
+<table class="table">
+    <thead><tr><th>Tên</th><th>Giá</th><th>Quầy</th><th>Trạng thái</th><th></th></tr></thead>
+    <tbody>
+        @foreach (var m in Filtered())
+        {
+            <tr>
+                <td>@m.Name</td><td>@m.Price</td><td>@m.Stall</td>
+                <td><button class="btn btn-sm @(m.IsAvailable ? "btn-primary" : "btn-secondary")" @onclick="() => Toggle(m.Id)">@(m.IsAvailable ? "Còn bán" : "Hết")</button></td>
+                <td>
+                    <button class="btn btn-warning btn-sm" @onclick="() => edit = new MenuItem { Id = m.Id, Name = m.Name, Price = m.Price, Stall = m.Stall, IsAvailable = m.IsAvailable }">Sửa</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => delId = m.Id">Xoá</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (edit != null)
+{
+    <EditForm Model="edit" OnValidSubmit="Save">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <label>Tên:</label><InputText @bind-Value="edit.Name" class="form-control" />
+        <ValidationMessage For="() => edit.Name" />
+        <label>Giá:</label><InputNumber @bind-Value="edit.Price" class="form-control" />
+        <label>Quầy:</label><InputText @bind-Value="edit.Stall" class="form-control" />
+        <button type="submit" class="btn btn-primary mt-2">Lưu</button>
+        <button type="button" class="btn btn-secondary mt-2" @onclick="() => edit = null">Hủy</button>
+    </EditForm>
+}
+
+@if (delId != null)
+{
+    <p>Chắc chắn xoá món @delId? <button class="btn btn-danger btn-sm" @onclick="ConfirmDel">Yes</button> <button class="btn btn-secondary btn-sm" @onclick="() => delId = null">No</button></p>
+}
+
+@code {
+    string kw = "";
+    List<MenuItem> items = new();
+    MenuItem? edit;
+    int? delId;
+
+    protected override async Task OnInitializedAsync() => await Load();
+    async Task Load()
+    {
+        using var db = Factory.CreateDbContext();
+        items = await db.MenuItems.OrderBy(x => x.Id).ToListAsync();
+    }
+    IEnumerable<MenuItem> Filtered() => items.Where(x => x.Name.Contains(kw, StringComparison.OrdinalIgnoreCase));
+    async Task Save()
+    {
+        using var db = Factory.CreateDbContext();
+        if (edit!.Id == 0) db.MenuItems.Add(edit);
+        else
+        {
+            var m = await db.MenuItems.FindAsync(edit.Id);
+            if (m != null) { m.Name = edit.Name; m.Price = edit.Price; m.Stall = edit.Stall; m.IsAvailable = edit.IsAvailable; }
+        }
+        await db.SaveChangesAsync();
+        edit = null;
+        await Load();
+    }
+    async Task Toggle(int id)
+    {
+        using var db = Factory.CreateDbContext();
+        var m = await db.MenuItems.FindAsync(id);
+        if (m != null) { m.IsAvailable = !m.IsAvailable; await db.SaveChangesAsync(); }
+        await Load();
+    }
+    async Task ConfirmDel()
+    {
+        using var db = Factory.CreateDbContext();
+        var m = await db.MenuItems.FindAsync(delId);
+        if (m != null)
+        {
+            try { db.MenuItems.Remove(m); await db.SaveChangesAsync(); }
+            catch { }
+        }
+        delId = null;
+        await Load();
+    }
+}
