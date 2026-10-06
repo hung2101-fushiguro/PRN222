@@ -1,0 +1,19 @@
+@implements IDisposable
+<span>@Text</span>
+@code {
+    [Parameter] public DateTime CreatedAt { get; set; }
+    Timer? t;
+    string Text = "";
+    protected override void OnInitialized()
+    {
+        Update();
+        t = new Timer(_ => { Update(); InvokeAsync(StateHasChanged); }, null, 1000, 1000);
+    }
+    void Update()
+    {
+        var d = DateTime.Now - CreatedAt;
+        if (d.TotalMinutes < 1) Text = $"{(int)d.TotalSeconds} giây";
+        else Text = $"{(int)d.TotalMinutes} phút {(int)(d.Seconds)} giây";
+    }
+    public void Dispose() => t?.Dispose();
+}

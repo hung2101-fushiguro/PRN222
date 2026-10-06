@@ -1,0 +1,23 @@
+@using FCanteenLab06.Models
+<span class="badge" style="background:@Color;color:white;padding:4px 8px;border-radius:4px">@Label</span>
+@code {
+    [Parameter] public OrderStatus Status { get; set; }
+    string Label => Status switch
+    {
+        OrderStatus.Pending => "Chờ tiếp nhận",
+        OrderStatus.Cooking => "Đang chế biến",
+        OrderStatus.Ready => "Sẵn sàng",
+        OrderStatus.Served => "Đã giao",
+        OrderStatus.Cancelled => "Đã huỷ",
+        _ => Status.ToString()
+    };
+    string Color => Status switch
+    {
+        OrderStatus.Pending => "gray",
+        OrderStatus.Cooking => "orange",
+        OrderStatus.Ready => "green",
+        OrderStatus.Served => "blue",
+        OrderStatus.Cancelled => "red",
+        _ => "black"
+    };
+}

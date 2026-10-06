@@ -1,0 +1,37 @@
+@page "/orders"
+@rendermode InteractiveServer
+@using FCanteenLab06.Data
+@using FCanteenLab06.Models
+@using FCanteenLab06.Components.Shared
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<CanteenDbContext> Factory
+
+<h3>Tất cả đơn (dùng lại OrderCard)</h3>
+@foreach (var o in tickets)
+{
+    <OrderCard Order="o" OnAdvance="Advance" />
+}
+
+@code {
+    List<OrderTicket> tickets = new();
+    protected override async Task OnInitializedAsync() => await Load();
+    async Task Load()
+    {
+        using var db = Factory.CreateDbContext();
+        tickets = await db.OrderTickets.Include(x => x.Lines).ThenInclude(l => l.MenuItem)
+            .OrderByDescending(x => x.CreatedAt).ToListAsync();
+    }
+    async Task Advance(int id)
+    {
+        using var db = Factory.CreateDbContext();
+        var o = await db.OrderTickets.FindAsync(id);
+        if (o == null) return;
+        var old = o.Status;
+        if (old == OrderStatus.Pending) o.Status = OrderStatus.Cooking;
+        else if (old == OrderStatus.Cooking) o.Status = OrderStatus.Ready;
+        else if (old == OrderStatus.Ready) o.Status = OrderStatus.Served;
+        db.Histories.Add(new OrderStatusHistory { OrderTicketId = id, OldStatus = old, NewStatus = o.Status, ChangedBy = "Bep A", ChangedAt = DateTime.Now });
+        await db.SaveChangesAsync();
+        await Load();
+    }
+}

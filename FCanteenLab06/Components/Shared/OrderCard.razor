@@ -1,0 +1,29 @@
+@using FCanteenLab06.Models
+@using FCanteenLab06.Components.Shared
+<div style="border:2px solid @(IsLate ? "red" : "#ccc");background:@(IsLate ? "#fff3f3" : "white");padding:10px;margin:8px;border-radius:8px">
+    <b>@Order.TicketCode</b> - @Order.Stall
+    <StatusBadge Status="Order.Status" />
+    <br />
+    <small>Tạo lúc @Order.CreatedAt.ToString("HH:mm") (<ElapsedTimer CreatedAt="Order.CreatedAt" /> trước)</small>
+    <ul>
+        @foreach (var l in Order.Lines)
+        {
+            <li>@l.MenuItem?.Name x @l.Quantity</li>
+        }
+    </ul>
+    <i>@Order.Note</i>
+    <br />
+    <button class="btn btn-primary btn-sm" @onclick="() => OnAdvance.InvokeAsync(Order.Id)">@NextLabel</button>
+</div>
+@code {
+    [Parameter] public OrderTicket Order { get; set; } = null!;
+    [Parameter] public EventCallback<int> OnAdvance { get; set; }
+    bool IsLate => DateTime.Now - Order.CreatedAt > TimeSpan.FromMinutes(10);
+    string NextLabel => Order.Status switch
+    {
+        OrderStatus.Pending => "Tiếp nhận",
+        OrderStatus.Cooking => "Xong",
+        OrderStatus.Ready => "Giao",
+        _ => "Xong"
+    };
+}
